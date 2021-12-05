@@ -1,0 +1,21 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style/style.css">
+    <title>Document</title>
+</head>
+<body>
+    {{!-- {{>navbar}} --}}
+    <h1>Welcom to Log in page : </h1>
+    <form action="/login" method="post">
+        <input type="text" name="username" placeholder="Enter Username : "><br><br>
+        <input type="passord" name="password" placeholder="Enter password..."><br><br>
+        {{!-- <button type="submit">Submit</button> --}}
+        <input type="submit" value="Log in">
+    </form>
+</body>
+</html>
