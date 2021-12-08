@@ -1,5 +1,5 @@
 require("dotenv").config();
-
+const cookieParser = require("cookie-parser");
 const express = require("express");
 const bodyParser = require("body-parser");
 const app = express();
@@ -10,6 +10,7 @@ require("./db/conn");
 const path = require("path");
 const Register = require("./models/registers");
 const bcrypt = require("bcryptjs");
+const auth = require("./middleware/auth");
 
 const static_path = path.join(__dirname,"../public");
 const template_path = path.join(__dirname,"../templates/views");
@@ -18,7 +19,9 @@ const partials_path = path.join(__dirname,"../templates/partials");
 console.log(process.env.SECRET_KEY);
 app.use(express.urlencoded({extended:false}));
 
+app.use(cookieParser());
 app.use(express.static(static_path));
+
 app.set("view engine","hbs");
 app.set("views",template_path);
 hbs.registerPartials(partials_path);
@@ -26,6 +29,11 @@ hbs.registerPartials(partials_path);
 app.get("/",(req,res)=>{
     // res.send("hello from rohit");☻
     res.render("home");
+});
+app.get("/secret", auth, (req,res)=>{
+    // res.send("hello from rohit");☻
+    // console.log(`the cookie gets after the registerations are : ${req.cookies.jwt}`); 
+    res.render("secret");
 });
 
 app.get("/register",(req,res)=>{
@@ -66,7 +74,11 @@ app.post("/register", async (req,res)=>{
             });
 
             const token = await registerStudent.generateAuthToken();
-            console.log("token getnerated is : "+token);
+            // console.log("token getnerated is : "+token);
+            res.cookie("jwt",token,{
+                expires:new Date(Date.now()+5000),httpOnly:true
+            });
+            // console.log(cookie);
             const registered = await registerStudent.save();
             res.status(201).render("home");
         }
@@ -99,8 +111,11 @@ app.post("/login", async (req,res)=>{
         const token = await userInfo.generateAuthToken();
         console.log("token getnerated during log in is : "+token);
         // console.log(isMatch);
+        res.cookie("jwt",token,{
+            expires:new Date(Date.now()+50000),
+            httpOnly:true});
         if(isMatch){
-            res.render("home");
+            res.render("logedin");
         }
         else{
             res.send("Invalid Log in details");
@@ -108,6 +123,23 @@ app.post("/login", async (req,res)=>{
     }
     catch(err){
         res.status(400).send("Invalid Log in Details");
+    }
+});
+
+app.get("/logout", auth, async(req,res)=>{
+    try{
+        console.log(req.user);
+        // req.user.tokens = req.user.tokens.filter((currElement)=>{
+        //     return currElement!== req.token;
+        // });
+        req.user.tokens = [];
+        res.clearCookie("jwt");
+        console.log("logout successfully");
+        await req.user.save();
+        res.render("login");
+    }
+    catch(err){
+        res.status(401).send(err);
     }
 });
 
